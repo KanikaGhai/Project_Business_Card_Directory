@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <script src="https://apis.google.com/js/platform.js" async defer></script>
+	<script src="https://apis.google.com/js/client.js"></script>
+	
+	<!-- CSS Styles FOR SPEEK BOX -->
+<style>
+    .speech {border: 1px solid #DDD; width: 300px; padding: 0; margin: 0}
+    .speech input {border: 0; width: 240px; display: inline-block; height: 30px;}
+    .speech img {float: right; width: 40px }
+ </style>
+    
+  <style>
+    /* Set height of the grid so .sidenav can be 100% (adjust as needed) */
+    .row.content {height: 550px}
+    
+    /* Set gray background color and 100% height */
+    .sidenav {
+      background-color: #f1f1f1;
+      height: 100%;
+    }
+        
+    /* On small screens, set height to 'auto' for the grid */
+    @media screen and (max-width: 767px) {
+      .row.content {height: auto;} 
+    }
+  </style>
+</head>
+<body>
+
+<script>
+
+
+function startDictation() {
+    
+    if (window.hasOwnProperty('webkitSpeechRecognition')) {
+        
+        var recognition = new webkitSpeechRecognition();
+       
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        
+        recognition.lang = "en-US";
+        recognition.start();
+        
+        recognition.onresult = function(e) {
+            document.getElementById('transcript').value
+            = e.results[0][0].transcript;
+            recognition.stop();
+            var x = document.getElementById("myAudio2");
+            var count = 0;
+           
+         
+            
+            
+            if (document.getElementById('transcript').value
+                == ("I want to schedule a meeting" || "i want to schedule meeting" || "connect me" || "i want to request service"))
+                {
+                    document.getElementById('labnol').submit();
+                    var chatBotText = document.getElementById('transcript').value;
+                    //alert(chatBotText);
+                    document.cookie="chatBotText="+chatBotText;
+                    x.play();
+                    while(count<4500000000)
+                    {
+                        count++;
+                    }
+                    
+                }
+            else{
+            	var audio = document.getElementById('myAudio');
+            	document.getElementById('error').innerHTML="Give proper input. ex. I want to schedule a meerting...!!!"
+            	audio.play();
+            }
+        };
+        
+        recognition.onerror = function(e) {
+            recognition.stop();
+        }
+        
+    }
+}
+
+
+function addContact(entry) {
+	  var config = {
+	    'client_id': '1056283717020-12usahge7ruejn6frulpbjqe8s6t1bh7.apps.googleusercontent.com',
+	    'scope': 'https://www.google.com/m8/feeds',
+	    'cookie_policy': 'single_host_origin'
+	  };
+	  gapi.auth.authorize(config, function() {
+	    insert(config, entry);
+	  });
+	}
+
+	function insert(config, entry) {
+		var e = JSON.stringify(entry);
+		//alert(e);
+	  gapi.client.request({
+	    'method': 'POST',
+	    'path': '/m8/feeds/contacts/default/full/',
+	    'headers': {
+	      'GData-Version': 3.0
+	    },
+	    'body': {
+	      'entry': [entry]
+	    },
+	    'callback': function(data) {
+	      if (data.hasOwnProperty('entry')) {
+	        var msg = "Your Google Contacts have been updated to include "+JSON.stringify(entry.title.$t);
+	        document.getElementById('error').innerHTML=msg;
+	        //window.alert(msg.concat(data.entry.title.$t))
+	      } else {
+	        var msg = "Contact information could not be added for "+JSON.stringify(entry.title.$t);
+	        document.getElementById('error').innerHTML=msg;
+	       
+	       // window.alert(msg.concat(entry.title.$t))
+	      }
+	    }
+	  });
+	}
+	
+	function addContacts(contactName,contactEmailId,organization,contactNumber) {
+        var entry = {
+          "category": [{
+            "scheme": "http:\/\/schemas.google.com\/g\/2005#kind",
+            "term": "http:\/\/schemas.google.com\/contact\/2008#contact"
+          }],
+          "title": {
+            "type": "text",
+            //"$t": "Team Avengers6"
+            "$t": decodeURI(contactName)
+          },
+          "content": [{
+            "type": "text",
+            "$t": "[Business Card Application]"
+          }],
+          "gd$email": [{
+            "rel": "http:\/\/schemas.google.com\/g\/2005#other",
+            //"address": "Avengers@sjsu.edu",
+            "address": decodeURIComponent(contactEmailId),
+            "primary": "true"
+          }],
+          "gd$organization": [{
+              "rel": "http://schemas.google.com/g/2005#work",
+              "gd$orgName": [{
+                  "type": "text",
+                 // "$t": "Students"
+                  "$t": decodeURIComponent(organization)
+                }],
+              "primary": "true"
+            }],
+          "gd$phoneNumber": [{
+            "rel": "http:\/\/schemas.google.com\/g\/2005#home",
+            "$t": decodeURIComponent(contactNumber),
+            //"$t": "669.248.9381",
+            "primary": "true"
+          }]
+        };
+        addContact(entry);
+      }
+	
+	
+
+function deleteContacts(id){
+	//alert(id);	
+	$('#spinner').show();
+	$.ajax({
+        url: "/deleteFileAndUpdateDB",
+        type: 'POST',
+        data: { id: id },
+        success :function(data) {
+        document.getElementById('error').innerHTML="File deleted successfully...!!";
+          display_table();
+          $('#spinner').hide();
+       }
+    });
+};
+
+function referContact(id,contactName,contactEmailId,organization,contactNumber){
+	var contactName = decodeURIComponent(contactName);
+	var contactEmailId = decodeURIComponent(contactEmailId);
+	var organization = decodeURIComponent(organization);
+	var contactNumber = decodeURIComponent(contactNumber);
+	var id = decodeURIComponent(id);
+	
+	var firstName = document.cookie.replace(/(?:(?:^|.*;\s*)firstName\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+	var lastName = document.cookie.replace(/(?:(?:^|.*;\s*)lastName\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+	var referEmailId=document.getElementById('referEmailId').value;
+	//alert(contactName);
+	$('#spinner').show();
+	$.ajax({
+        url: "/businessCardReferral",
+        type: 'POST',
+        data: { id: id,firstName: firstName,lastName: lastName,referEmailId: referEmailId,contactName: contactName,contactEmailId: contactEmailId, organization: organization,contactNumber: contactNumber },
+        success :function(data) {
+        document.getElementById('error').innerHTML="Card has been referred succefully!!";
+          display_table();
+          $('#spinner').hide();
+       }
+    });
+};
+
+function searchCard() {
+	$('#spinner').show();
+	var userEmailId = document.cookie.replace(/(?:(?:^|.*;\s*)emailId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+	var searchType = document.getElementById('searchType').value;
+	var searchInput = document.getElementById('searchInput').value;
+	//var CognitoID = document.cookie.replace(/(?:(?:^|.*;\s*)CognitoID\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+	var CloudFrontUrl = document.cookie.replace(/(?:(?:^|.*;\s*)CloudFrontUrl\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+	
+	$.ajax({
+		type: 'GET',
+		url: '/searchBusinessCard',
+		data: { userEmailId: userEmailId,searchType: searchType,searchInput: searchInput },
+		success: function (data) {
+			var jsonResponse = JSON.stringify(data);
+			var jsonData = JSON.parse(jsonResponse);
+			var display_data = "";
+			//alert(jsonResponse);
+			if(jsonData.length == 0)
+				{
+					document.getElementById('error').innerHTML="No cards found..!!!";
+					display_data = "";
+				}
+			else{
+			for (var i = 0; i < jsonData.length; i++) {
+				var contactName=encodeURI(jsonData[i].contactName);
+				var contactEmailId=encodeURIComponent(jsonData[i].contactEmailId);
+				var organization=encodeURIComponent(jsonData[i].organization);
+				var contactNumber=encodeURIComponent(jsonData[i].contactNumber);
+				var cardId=parseInt(jsonData[i].id,10);
+				var id = decodeURIComponent(id);
+				
+				var cfurl=CloudFrontUrl+"/"+userEmailId+"/"+decodeURIComponent(jsonData[i].fileName);
+				
+				display_data += '<div class="col-sm-4">';
+				display_data += '<div class="well">';
+				display_data += '<div align="right"><a href="'+ cfurl +'" target="_blank"><i class="fa fa-download" style="font-size:30px;color:green"></i></a>';
+				display_data += '<a href=javascript:void(0) onClick=deleteContacts('+ cardId +')><i class="fa fa-trash" style="font-size:30px;color:red"></i></a></div>';
+				display_data += '<p>Contact Name: ' + jsonData[i].contactName + '<p>';
+				display_data += '<p>Email: ' + jsonData[i].contactEmailId + '</p>';
+				display_data += '<p>Mobile: ' + jsonData[i].contactNumber + '</p>';
+				display_data += '<p>Organization: ' + jsonData[i].organization + '</p>';
+				display_data += '<p>Comments: ' + jsonData[i].fileDescription + '</p>';
+				display_data += '<button onClick=addContacts("'+ contactName +'","'+ contactEmailId +'","'+ organization +'","'+ contactNumber +'")>Add Contact To Google</button><br><br>';
+				display_data += '<input type="text" name="referEmailId" id="referEmailId" placeholder="Email Id"><button onClick=referContact("'+ id +'","'+ contactName +'","'+ contactEmailId +'","'+ organization +'","'+ contactNumber +'")>Refer Contact</button>';
+				display_data += '</div>';
+				display_data += '</div>';
+			}
+			//$('#t01').append(display_data);
+			}
+			document.getElementById('t01').innerHTML = display_data;
+			$('#spinner').hide();
+		},
+		error: function (error) {
+			var errorjson = JSON.stringify(error);
+			
+		}
+	});
+};
+
+function logout(){
+	//var account_id = document.cookie.replace(/(?:(?:^|.*;\s*)account_id\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+	document.cookie = "firstName=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+	document.cookie = "lastName=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+	document.cookie = "emailId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+	//document.cookie = "account_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+	//document.cookie = "role=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+};
+
+
+function display_table() {
+	var firstName = document.cookie.replace(/(?:(?:^|.*;\s*)firstName\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+	var lastName = document.cookie.replace(/(?:(?:^|.*;\s*)lastName\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+	var emailId = document.cookie.replace(/(?:(?:^|.*;\s*)emailId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+	var CloudFrontUrl = document.cookie.replace(/(?:(?:^|.*;\s*)CloudFrontUrl\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+	//document.getElementById('description').value="";
+    //document.getElementById('file').value="";
+	document.getElementById("displayUser").innerHTML='Welcome ' + firstName +" "+lastName;
+	//$("#t01").remove();
+	$.ajax({
+		type: 'GET',
+		url: '/getUserFiles',
+		data: { emailId: emailId },
+		success: function (data) {
+			var jsonResponse = JSON.stringify(data);
+			var jsonData = JSON.parse(jsonResponse);
+			//alert(jsonResponse);
+			var display_data = "";
+			for (var i = 0; i < jsonData.length; i++) {
+				contactName=encodeURI(jsonData[i].contactName);
+				contactEmailId=encodeURIComponent(jsonData[i].contactEmailId);
+				organization=encodeURIComponent(jsonData[i].organization);
+				contactNumber=encodeURIComponent(jsonData[i].contactNumber);
+				var cardId=parseInt(jsonData[i].id,10);
+				var id = decodeURIComponent(id);
+				
+				display_data += '<div class="col-sm-4">';
+				display_data += '<div class="well">';
+				display_data += '<div align="right"><a href="'+ CloudFrontUrl +'" target="_blank"><i class="fa fa-download" style="font-size:30px;color:green"></i></a>';
+				display_data += '<div align="right"><a href=javascript:void(0) onClick=deleteContacts('+ cardId +')><i class="fa fa-trash" style="font-size:30px;color:red"></i></a></div>';
+				display_data += '<p>Contact Name: ' + jsonData[i].contactName + '<p>';
+				display_data += '<p>Email: ' + jsonData[i].contactEmailId + '</p>';
+				display_data += '<p>Mobile: ' + jsonData[i].contactNumber + '</p>';
+				display_data += '<p>Organization: ' + jsonData[i].organization + '</p>';
+				display_data += '<p>Comments: ' + jsonData[i].fileDescription + '</p>';
+				display_data += '<button onClick=addContacts("'+ contactName +'","'+ contactEmailId +'","'+ organization +'","'+ contactNumber +'")>Add Contact To Google</button><br><br';
+				display_data += '<input type="text" name="referEmailId" id="referEmailId" placeholder="Email Id"><button onClick=referContact("'+ id +'","'+ contactName +'","'+ contactEmailId +'","'+ organization +'","'+ contactNumber +'")>Refer Contact</button>';
+				display_data += '</div>';
+				display_data += '</div>';
+			}
+			//$('#t01').append(display_data);
+			document.getElementById('t01').innerHTML = display_data;
+		},
+		error: function (error) {
+			var errorjson = JSON.stringify(error);
+		}
+	});
+};
+
+$(document).ready(function () {
+	$('#spinner').hide();
+	var firstName = document.cookie.replace(/(?:(?:^|.*;\s*)firstName\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+	var lastName = document.cookie.replace(/(?:(?:^|.*;\s*)lastName\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+	var emailId = document.cookie.replace(/(?:(?:^|.*;\s*)emailId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+	//document.getElementById('description').value="";
+    //document.getElementById('file').value="";
+	document.getElementById("displayUser").innerHTML='Welcome ' + firstName +" "+lastName;
+	//display_table()
+	
+	$.ajax({
+        url: "/getBusinessCardUrls",
+        type: 'GET',
+        success :function(data) {
+        	var jsonResponse = JSON.stringify(data);
+        	document.cookie="CloudFrontUrl="+data.CloudFrontUrl;
+        	document.cookie="CognitoID="+data.CognitoID;
+       }
+    });
+});
+
+$(function() {
+    $("#upload_file").submit(function(e) {
+    	e.preventDefault();
+    	//var formData = new FormData(this); 
+    	var emailId = document.cookie.replace(/(?:(?:^|.*;\s*)emailId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+    	var firstName = document.cookie.replace(/(?:(?:^|.*;\s*)firstName\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+    	var lastName = document.cookie.replace(/(?:(?:^|.*;\s*)lastName\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+    	var file = document.getElementById('file').value;
+		if (file.lastIndexOf('\\') >= 0){file = file.substr(file.lastIndexOf('\\') + 1);}
+		var fileDescription = document.getElementById('description').value;
+		var formData = new FormData(this);
+		formData.append("firstName", firstName);
+		formData.append("lastName", lastName);
+		formData.append("emailId", emailId);
+		formData.append("fileName", file);
+		formData.append("fileDescription", fileDescription);
+		
+    	$('#spinner').show();
+        $.ajax({
+            url: "/uploadBusinessCardToS3",
+            type: 'POST',
+            cache: false,
+            contentType: false,
+            processData: false,
+            enctype: 'multipart/form-data',
+        	data: formData,
+            success :function(data) {
+            	var json = JSON.stringify(data);
+            	//alert(data.reason);
+            	if(data.status=="true")
+            	{document.getElementById('error').innerHTML="File Uploaded Successfully...!!!";}
+            	//display_table();
+            	$('#spinner').hide();
+              }
+        });
+    });
+});
+
+</script>
+
+<nav class="navbar navbar-inverse visible-xs">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>                        
+      </button>
+      <a class="navbar-brand" href="#">Logo</a>
+      
+    </div>
+    <div class="collapse navbar-collapse" id="myNavbar">
+      <ul class="nav navbar-nav">
+        <li class="active"><a href="#">Dashboard</a></li>
+        <li><a href="#"></a></li>
+        <li><a href="#"></a></li>
+        <li><a href="#"></a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid">
+  <div class="row content">
+    <div class="col-sm-3 sidenav hidden-xs">
+      <h3>Business Card Directory</h3>
+      <div align='left'><span style="font-size:150%" id='displayUser'></span></div>
+      <ul class="nav nav-pills nav-stacked"><br>
+        <li class="active"><a href="Home1.html">Dashboard</a></li>
+        <li><a href="ListCards.html">List of Cards</a></li>
+        <li><a href=index.html onClick=logout()>
+          <span class="glyphicon glyphicon-log-out"></span> Log out
+	 </a></li>
+      </ul><br>
+    </div>
+    <br>
+    
+    <div class="col-sm-9">
+      <div class="well">
+        <h4>Upload Card Here:</h4>
+        <form id="upload_file" method="post" enctype="multipart/form-data">
+	 		<p id='error' style="color:green;"></p>
+  			<input type="file" name="file" id="file" required><input type="text" name="description" id="description" placeholder="Comments">
+  			<button>Upload File</button><br>
+  			<br><br>
+  			</form>
+  		</div>
+  		<div class="well">
+  		<select id='searchType' name='searchType'>
+  				<option value=''>Search Criteria</option>
+  				<option value='1'>Name</option>
+  				<option value='2'>Organization</option>
+  			</select>
+  			<input type='text' name='searchInput' id='searchInput' placeholder='Search Card' required>
+  			<a href=javascript:void(0) onClick=searchCard()><i class="fa fa-search"></i></a> 		
+			</div>
+	<div class="well">
+	<form id="labnol" method="get" action="ChatBot.html">
+    <div class="speech">
+   
+        Schedule Meeting:<input type="text" name="q" id="transcript" placeholder="Speak" />
+        <img onclick="startDictation()" src="cHidSVu.gif"/>
+    </div>
+	</form>
+
+
+
+	<audio id="myAudio">
+    <source src="voiceerror.mp3" type="audio/mp3">
+        <source src="voiceerror.mp3" type="audio/mpeg">
+            Your browser does not support the audio element.
+	</audio>
+	
+<audio id="myAudio2">
+    <source src="goahead.mp3" type="audio/mp3">
+        <source src="goahead.mp3" type="audio/mpeg">
+            Your browser does not support the audio element.
+	</audio>
+	
+	<div id="spinner">
+		<img src="ajax-loader.gif" />
+	</div>
+	
+      </div>
+      <div class="row" id="t01">
+        
+      </div>
+   
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

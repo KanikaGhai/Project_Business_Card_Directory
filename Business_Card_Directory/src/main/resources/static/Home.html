@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Add icon library -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Add icon library -->
+ <meta name="viewport" content="width=device-width, initial-scale=1">
+ <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<script src="https://apis.google.com/js/platform.js?onload=init" async defer></script>
+<meta name="google-signin-client_id" content="741734147837-194sho9o3mgage552qfg48lor7bkcmcc.apps.googleusercontent.com">
+
+
+<style>
+
+
+.left { width: 39%; float:left; test-align:left; display:inline; margin-left:30px;}
+.right { width: 39%; float:center; margin-right:10px; text-align:left; display:inline; }
+.right1 { width: 39%; float:right; text-align:left; margin-right:80px; display:inline; }
+.containerdiv { width: 80%; margin:auto;}
+
+.btn {
+    background-color: DodgerBlue;
+    border: none;
+    color: red;
+    padding: 7px 10px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+/* Darker background on mouse-over */
+.btn:hover {
+    background-color: RoyalBlue;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    text-align: Center;
+}
+
+th, td {
+    text-align: left;
+    padding: 8px;
+}
+
+tr:nth-child(even){background-color: #f2f2f2}
+
+th {
+    background-color: #4CAF50;
+    color: white;
+}
+/*table {
+    width:100%;
+}
+table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+th, td {
+    padding: 15px;
+    text-align: center;
+}*/
+table#t01 tr:nth-child(even) {
+    background-color: #eee;
+}
+table#t01 tr:nth-child(odd) {
+   background-color: #fff;
+}
+table#t01 th {
+    background-color: #DB7093;
+    color: white;
+}
+</style>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+</head>
+
+<body>
+<script>
+
+function deleteFile(file_id){
+	//var account_id = document.cookie.replace(/(?:(?:^|.*;\s*)account_id\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+	$('#spinner').show();
+	$.ajax({
+        url: "accounts/"+account_id+"/files/"+file_id,
+        type: 'DELETE',
+        success :function(data) {
+        document.getElementById('error').innerHTML="File deleted successfully...!!";
+          display_table();
+          $('#spinner').hide();
+       }
+    });
+};
+
+function logout(){
+	//var account_id = document.cookie.replace(/(?:(?:^|.*;\s*)account_id\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+	document.cookie = "firstName=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+	document.cookie = "lastName=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+	document.cookie = "emailId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+	//document.cookie = "account_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+	//document.cookie = "role=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+};
+
+
+function updateFile(description){
+	document.getElementById('description').value=decodeURIComponent(description);
+    document.getElementById('file').focus();
+}
+
+function display_table() {
+	var firstName = document.cookie.replace(/(?:(?:^|.*;\s*)firstName\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+	var lastName = document.cookie.replace(/(?:(?:^|.*;\s*)lastName\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+	var emailId = document.cookie.replace(/(?:(?:^|.*;\s*)emailId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+	document.getElementById('description').value="";
+    document.getElementById('file').value="";
+	document.getElementById("displayUser").innerHTML='Welcome ' + firstName +" "+lastName;
+	$.ajax({
+		type: 'GET',
+		url: '/getUserFiles',
+		data: { emailId: emailId },
+		success: function (data) {
+			var jsonResponse = JSON.stringify(data);
+			var jsonData = JSON.parse(jsonResponse);
+			var display_data = "";
+			for (var i = 0; i < jsonData.length; i++) {
+				display_data += '<tr>';
+				display_data += '<td>' + jsonData[i].contactName + '</td>';
+				display_data += '<td>' + jsonData[i].contactEmailId + '</td>';
+				display_data += '<td>' + jsonData[i].contactNumber + '</td>';
+				display_data += '<td>' + jsonData[i].organization + '</td>';
+				display_data += '<td>' + jsonData[i].fileDescription + '</td>';
+				//display_data += '<td><button class="download_button" id="' + jsonData[i].fileName + '" type="button" onclick="download(event)">Download</button></td>';
+				//display_data += '<td><button class="edit_button" id="' + jsonData[i].fileName + '" type="button" onclick="edit(event)">Edit</button></td>';
+				//display_data += '<td><button class="delete_button" id="' + jsonData[i].fileName + '" type="button" onclick="deleteFile(event)">Delete</button></td>';
+				//display_data += '</tr>';
+			}
+			$('#t01').append(display_data);
+		},
+		error: function (error) {
+			var errorjson = JSON.stringify(error);
+		}
+	});
+};
+
+$(document).ready(function () {
+	$('#spinner').hide();
+	display_table()
+});
+
+$(function() {
+    $("#upload_file").submit(function(e) {
+    	e.preventDefault();
+    	//var formData = new FormData(this); 
+    	var emailId = document.cookie.replace(/(?:(?:^|.*;\s*)emailId\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+    	var firstName = document.cookie.replace(/(?:(?:^|.*;\s*)firstName\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+    	var lastName = document.cookie.replace(/(?:(?:^|.*;\s*)lastName\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+    	var file = document.getElementById('file').value;
+		if (file.lastIndexOf('\\') >= 0){file = file.substr(file.lastIndexOf('\\') + 1);}
+		var fileDescription = document.getElementById('description').value;
+		var formData = new FormData(this);
+		formData.append("firstName", firstName);
+		formData.append("lastName", lastName);
+		formData.append("emailId", emailId);
+		formData.append("fileName", file);
+		formData.append("fileDescription", fileDescription);
+		
+    	$('#spinner').show();
+        $.ajax({
+            url: "/uploadBusinessCardToS3",
+            type: 'POST',
+            cache: false,
+            contentType: false,
+            processData: false,
+            enctype: 'multipart/form-data',
+        	data: formData,
+            success :function(data) {
+            	var json = JSON.stringify(data);
+            	//alert(data.reason);
+            	document.getElementById('error').innerHTML=data.reason;
+            	display_table();
+            	$('#spinner').hide();
+              }
+        });
+    });
+});
+
+</script>
+<div class="w3-container w3-cyan">
+<div align='left'><span style="color:white;font-size:150%" id='displayUser'></span></div>
+<div align='right'> 
+<a href=index.html onClick=logout() class="btn btn-info btn-lg">
+          <span class="glyphicon glyphicon-log-out"></span> Log out
+ </a>
+
+</div>
+</div>
+<br>
+<!-- <div id="myDIV" align=right>
+<input style="color:white;text-align:center;background-color:green;" type="button" onclick="location.href='admin.html';" value="Swtich to Admin View" />
+
+</div> -->
+
+	 <form id="upload_file" method="post" enctype="multipart/form-data">
+	 		<p id='error' style="color:green;"></p>
+  			<input type="file" name="file" id="file" required><input type="text" name="description" id="description" placeholder="Comments"><button>Upload File</button>
+	</form>
+
+	<div id="spinner">
+
+		<img src="ajax-loader.gif" />
+
+	</div>
+<br>
+<table style="width:100%" id="t01">
+  <tr>
+    <th>Card Holder Name</th>
+    <th>Email</th>
+    <th>Mobile</th>
+    <th>Organization</th>
+    <th>Comments</th> 
+    <th>Download Card</th>
+    <th>Delete Card</th>
+  </tr>
+</table>
+
+</body>
+
+</html>
